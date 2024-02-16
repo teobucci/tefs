@@ -15,3 +15,23 @@
 - {ref}`genindex`
 - {ref}`modindex`
 - {ref}`search`
+
+```{include} ../../README.md
+:relative-images:
+```
+
+```{warning}
+Library under heavy development
+```
+
+```{note}
+This is a note
+```
+
+```{seealso}
+See also
+```
+
+```python
+pip install numpy
+```
