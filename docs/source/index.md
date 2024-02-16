@@ -8,6 +8,8 @@
 ```{toctree}
 :caption: 'Contents:'
 :maxdepth: 2
+
+apidocs/modules
 ```
 
 # Indices and tables
