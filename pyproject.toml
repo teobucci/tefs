@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tefs"
+version = "0.1.0"
+authors = [
+    { name = "Teo Bucci", email = "teobucci8@gmail.com" },
+    { name = "Paolo Bonetti", email = "paolo.bonetti@polimi.it" },
+]
+description = "Causal feature selection for time series data using transfer entropy"
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = [
+    "tefs",
+    "transfer entropy",
+    "feature selection",
+    "causality",
+    "time series",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib", # Add other dependencies as required
+]
+
+[project.urls]
+Homepage = "https://github.com/teobucci/tefs"
+Documentation = "https://github.com/teobucci/tefs"
+Repository = "https://github.com/teobucci/tefs"
