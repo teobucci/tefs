@@ -19,15 +19,7 @@ def compute_transfer_entropy(
     lag_conditioning=None
 ) -> float:
     """
-    Computes the conditional transfer entropy $TE (X \\to Y \\mid Z)$ using the equivalence:
-
-    $$
-    TE_{LMK} (X \to Y \mid Z) = I(Y^t; \underbrace{X^{t-1} , \ldots , X^{t-L}}_{\text{last $L$ input}}  \mid  \underbrace{Y^{t-1} , \ldots , Y^{t-M}}_{\text{last $M$ target}} , \underbrace{Z^{t-1} , \ldots , Z^{t-K}}_{\text{last $K$ conditioning}})
-    $$
-
-    $$
-    TE_{LMK} (X \\to Y \\mid Z) = I(Y^t; \\underbrace{X^{t-1} , \\ldots , X^{t-L}}_{\\text{last $L$ input}}  \\mid  \\underbrace{Y^{t-1} , \\ldots , Y^{t-M}}_{\\text{last $M$ target}} , \\underbrace{Z^{t-1} , \\ldots , Z^{t-K}}_{\\text{last $K$ conditioning}})
-    $$
+    Computes the conditional transfer entropy from X to Y given Z, using the specified lags.
 
     :param X: Sample of a (multivariate) random variable representing the input
     :type X: np.ndarray of shape (n_samples, n_features)
@@ -93,7 +85,8 @@ def score_features(
     n_jobs=1
 ) -> np.ndarray:
     """
-    Computes the transfer entropy T_{X->Y|A} for each feature X_i in X
+    Computes the transfer entropy score for each feature :math:`X_i` in :math:`X`, to the target :math:`Y`, given the conditioning set :math:`X_A`.
+
     :param features: ndarray of shape N x p
     :param target: ndarray of shape N x 1
     :param conditioning: ndarray of shape N x q
@@ -104,6 +97,7 @@ def score_features(
     :param n_jobs: number of parallel jobs to run
     :return: a dictionary with key = feature index and value = transfer entropy score
     """
+    
     assert direction in ["forward", "backward"], "direction must be forward or backward"
     n_features = features.shape[1]
     args = []
