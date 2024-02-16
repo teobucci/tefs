@@ -10,6 +10,7 @@
 :maxdepth: 2
 
 apidocs/modules
+notebooks/usage
 ```
 
 # Indices and tables
