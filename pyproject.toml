@@ -28,6 +28,7 @@ dependencies = [
     "numpy",
     "pandas",
     "matplotlib", # Add other dependencies as required
+    "scipy",
 ]
 
 [project.urls]
@@ -36,7 +37,16 @@ Documentation = "https://github.com/teobucci/tefs"
 Repository = "https://github.com/teobucci/tefs"
 
 [project.optional-dependencies]
-docs = ["sphinx", "sphinx-rtd-theme", "myst-parser", "nbsphinx"]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "myst-parser",
+    "nbsphinx",
+    "ipykernel",
+    "jupyter",
+    "jupyterlab",
+    "nbconvert",
+]
 
 [tool.bumpver]
 current_version = "0.1.0"
