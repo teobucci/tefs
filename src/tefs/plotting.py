@@ -93,4 +93,4 @@ def plot_te_results(
     ax.set_xticks(x_values_with_data)
 
     # Show the plot
-    ax.legend(title="Variables", bbox_to_anchor=(1.6, 1))
+    ax.legend(title="Variables", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
