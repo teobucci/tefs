@@ -3,9 +3,12 @@ from typing import List
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib
 
 
-def list_of_dicts_to_dataframe(data: List[dict]) -> pd.DataFrame:
+def list_of_dicts_to_dataframe(
+        data: List[dict],
+        ) -> pd.DataFrame:
     """
     Helper function to convert a list of dictionaries to a pandas DataFrame, used to plot the results of the TE estimation.
 
@@ -36,7 +39,11 @@ def list_of_dicts_to_dataframe(data: List[dict]) -> pd.DataFrame:
     return df
 
 
-def plot_te_results(scores_iterations: List[dict], var_names: List[str], ax):
+def plot_te_results(
+        scores_iterations: List[dict],
+        var_names: List[str],
+        ax: matplotlib.axes.Axes,
+        ) -> None:
     """
     Plot the results of the TE estimation for each iteration.
 

@@ -15,14 +15,14 @@ IterationResult = Dict[str, Union[Dict[int, float], float]]
 
 
 def compute_transfer_entropy(
-    X,
-    Y,
-    Z,
-    k,
-    lag_features=1,
-    lag_target=1,
-    lag_conditioning=None
-) -> float:
+        X,
+        Y,
+        Z,
+        k,
+        lag_features=1,
+        lag_target=1,
+        lag_conditioning=None
+        ) -> float:
     """
     Computes the conditional transfer entropy from X to Y given Z, using the specified lags.
 
@@ -80,15 +80,15 @@ def compute_transfer_entropy(
     return estimate_cmi(member1, member2, member3, k)
 
 def score_features(
-    features,
-    target,
-    conditioning,
-    k,
-    lag_features,
-    lag_target,
-    direction,
-    n_jobs=1
-) -> np.ndarray:
+        features,
+        target,
+        conditioning,
+        k,
+        lag_features,
+        lag_target,
+        direction,
+        n_jobs=1
+        ) -> np.ndarray:
     """
     Computes the transfer entropy score for each feature :math:`X_i` in :math:`X`, to the target :math:`Y`, given the conditioning set :math:`X_A`.
 
@@ -144,15 +144,15 @@ def score_features_parallel(args):
     return compute_transfer_entropy(*args)
 
 def te_fs_forward(
-    features,
-    target,
-    k,
-    lag_features=1,
-    lag_target=1,
-    verbose=1,
-    var_names=None,
-    n_jobs=1,
-) -> List[IterationResult]:
+        features,
+        target,
+        k,
+        lag_features=1,
+        lag_target=1,
+        verbose=1,
+        var_names=None,
+        n_jobs=1,
+        ) -> List[IterationResult]:
     """
     Perform the forward selection of features based on the Transfer Entropy score.
 
@@ -237,15 +237,15 @@ def te_fs_forward(
     return results
 
 def te_fs_backward(
-    features,
-    target,
-    k,
-    lag_features=1,
-    lag_target=1,
-    verbose=1,
-    var_names=None,
-    n_jobs=1,
-) -> List[IterationResult]:
+        features,
+        target,
+        k,
+        lag_features=1,
+        lag_target=1,
+        verbose=1,
+        var_names=None,
+        n_jobs=1,
+        ) -> List[IterationResult]:
     """
     Perform the backward selection of features based on the Transfer Entropy score
 
@@ -339,7 +339,7 @@ def fs(
         verbose=1,
         var_names=None,
         n_jobs=1,
-    ):
+        ):
     """
     This function selects features either by forward or backward selection based on the Transfer Entropy score.
     

@@ -6,10 +6,16 @@ IterationResult = Dict[str, Union[Dict[int, float], float]]
 
 # Possible import of core functions if utilities manipulate their outputs directly
 
-def shift_data_up(data: pd.DataFrame, exclude: list[str]) -> pd.DataFrame:
+def shift_data_up(
+        data: pd.DataFrame,
+        exclude: list[str]
+        ) -> pd.DataFrame:
     """
-    Shifts all the columns up by 1, except the escluded ones.
-    I lose the first row and the last row.
+    Shifts all the rows up by 1, except the ones in the `exclude` list.
+    Note: we lose the first row and the last row.
+
+    :param data: The input data.
+
     """
     data_shifted_up = data.copy()
     for col in data.columns:
@@ -21,11 +27,25 @@ def shift_data_up(data: pd.DataFrame, exclude: list[str]) -> pd.DataFrame:
     return data_shifted_up
 
 def select_features(
-    results: List[IterationResult],
-    threshold: float,
-    direction: str,
-    verbose: int = 0,
-) -> List[int]:
+        results: List[IterationResult],
+        threshold: float,
+        direction: str,
+        verbose: int = 0,
+        ) -> List[int]:
+    """
+    Selects the features based on the transfer entropy scores and a threshold.
+
+    :param results: A list of IterationResult objects containing the feature scores.
+    :type results: List[IterationResult]
+    :param threshold: The threshold to use for feature selection.
+    :type threshold: float
+    :param direction: The direction of selection. Can be either "forward" or "backward".
+    :type direction: str
+    :param verbose: Verbosity level, defaults to 0.
+    :type verbose: int, optional
+    :return: A list of feature indexes representing the selected features.
+    """
+
     assert direction in ["forward", "backward"], "Invalid direction"
 
     if verbose > 0:
@@ -77,13 +97,13 @@ def select_features(
         return list(initial_features)
 
 def select_n_features(
-    results: List[IterationResult],
-    n: int,
-    direction: str,
-    verbose: int = 0,
-) -> List[int]:
+        results: List[IterationResult],
+        n: int,
+        direction: str,
+        verbose: int = 0,
+        ) -> List[int]:
     """
-    Selects the n features with the highest or lowest score, regardless of the threshold and the transfer entropy scores.
+    Selects the `n` features with the highest or lowest score, regardless of the threshold and the transfer entropy scores.
 
     :param results: A list of IterationResult objects containing the feature scores.
     :type results: List[IterationResult]
@@ -95,6 +115,7 @@ def select_n_features(
     :type verbose: int, optional
     :return: A list of feature indexes representing the selected features.
     """
+
     assert direction in ["forward", "backward"], "Invalid direction"
     num_total_features = len(results[0]["feature_scores"])
     assert n <= num_total_features, f"n must be <= {num_total_features}"

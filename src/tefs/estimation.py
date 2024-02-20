@@ -6,7 +6,12 @@ from scipy.special import digamma
 # TODO might be worth checking
 # - https://github.com/syanga/pycit/blob/master/pycit/estimators/mixed_cmi.py
 # - https://github.com/wgao9/knnie/blob/master/knnie.py
-def estimate_mi(X, Y, k=5, estimation_method="digamma"):
+def estimate_mi(
+        X,
+        Y,
+        k=5,
+        estimation_method="digamma",
+        ):
     """
     Estimate the Mutual Information (MI) between :math:`X` and :math:`Y`, i.e. :math:`I(X;Y)`, based on *Mixed Random Variable Mutual Information Estimator - Gao et al.*.
 
@@ -72,7 +77,13 @@ def estimate_mi(X, Y, k=5, estimation_method="digamma"):
     return res
 
 
-def estimate_cmi(X, Y, Z, k=5, estimation_method="digamma"):
+def estimate_cmi(
+        X,
+        Y,
+        Z,
+        k=5,
+        estimation_method="digamma",
+        ):
     """
     Estimate the Conditional Mutual Information (CMI) between :math:`X` and :math:`Y` given :math:`Z`, i.e. :math:`I(X;Y \mid Z)`, using the equivalance
 
