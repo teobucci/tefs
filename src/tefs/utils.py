@@ -84,8 +84,17 @@ def select_n_features(
 ) -> List[int]:
     """
     Selects the n features with the highest or lowest score, regardless of the threshold and the transfer entropy scores.
-    """
 
+    :param results: A list of IterationResult objects containing the feature scores.
+    :type results: List[IterationResult]
+    :param n: The number of features to select.
+    :type n: int
+    :param direction: The direction of selection. Can be either "forward" or "backward".
+    :type direction: str
+    :param verbose: Verbosity level, defaults to 0.
+    :type verbose: int, optional
+    :return: A list of feature indexes representing the selected features.
+    """
     assert direction in ["forward", "backward"], "Invalid direction"
     num_total_features = len(results[0]["feature_scores"])
     assert n <= num_total_features, f"n must be <= {num_total_features}"

@@ -8,12 +8,7 @@ from scipy.special import digamma
 # - https://github.com/wgao9/knnie/blob/master/knnie.py
 def estimate_mi(X, Y, k=5, estimation_method="digamma"):
     """
-    Mutual Information (MI) Estimator of I(X;Y) based on Mixed Random Variable Mutual Information Estimator - Gao et al.
-
-    This function estimates the mutual information between two arrays, X and Y, using the method described by Gao et al.
-    The arrays are first checked to ensure they are two-dimensional, and reshaped if necessary.
-    A KDTree is then used to find the k nearest neighbors for each point in the combined dataset.
-    The mutual information is then estimated using either the digamma function or a logarithmic function, depending on the 'estimate' parameter.
+    Estimate the Mutual Information (MI) between :math:`X` and :math:`Y`, i.e. :math:`I(X;Y)`, based on *Mixed Random Variable Mutual Information Estimator - Gao et al.*.
 
     :param X: The first input array.
     :type X: numpy.ndarray
@@ -21,7 +16,7 @@ def estimate_mi(X, Y, k=5, estimation_method="digamma"):
     :type Y: numpy.ndarray
     :param k: The number of nearest neighbors to consider, defaults to 5.
     :type k: int, optional
-    :param estimation_method: The estimation method to use, defaults to "digamma".
+    :param estimation_method: The estimation method to use, can be either 'digamma' or 'log', defaults to 'digamma'.
     :type estimation_method: str, optional
     :return: The estimated mutual information.
     :rtype: float
@@ -71,7 +66,7 @@ def estimate_mi(X, Y, k=5, estimation_method="digamma"):
         
         if estimation_method == "digamma":
             res += (digamma(k_hat) + np.log(num_samples) - digamma(n_xi) - digamma(n_yi)) / num_samples
-        else:
+        elif estimation_method == "log":
             res += (digamma(k_hat) + np.log(num_samples) - np.log(n_xi + 1) - np.log(n_yi + 1)) / num_samples
     
     return res
@@ -79,10 +74,12 @@ def estimate_mi(X, Y, k=5, estimation_method="digamma"):
 
 def estimate_cmi(X, Y, Z, k=5, estimation_method="digamma"):
     """
-    Estimate the Conditional Mutual Information (CMI) between X and Y given Z.
-    Uses the formula: I(X;Y|Z) = I(X,Z;Y) - I(Z;Y)
+    Estimate the Conditional Mutual Information (CMI) between :math:`X` and :math:`Y` given :math:`Z`, i.e. :math:`I(X;Y \mid Z)`, using the equivalance
 
-    Note that I(X;Y|Z) = I(Y;X|Z)
+    .. math::
+        I(X;Y \mid Z) = I(X,Z;Y) - I(Z;Y)
+
+    Note that :math:`I(X;Y \mid Z) = I(Y;X \mid Z)`.
 
     :param X: The input variable X.
     :type X: numpy.ndarray

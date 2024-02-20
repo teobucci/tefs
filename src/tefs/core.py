@@ -8,6 +8,11 @@ import pandas as pd
 
 from .estimation import estimate_cmi
 
+from typing import Dict, Union, List
+
+IterationResult = Dict[str, Union[Dict[int, float], float]]
+
+
 
 def compute_transfer_entropy(
     X,
@@ -87,14 +92,22 @@ def score_features(
     """
     Computes the transfer entropy score for each feature :math:`X_i` in :math:`X`, to the target :math:`Y`, given the conditioning set :math:`X_A`.
 
-    :param features: ndarray of shape N x p
-    :param target: ndarray of shape N x 1
-    :param conditioning: ndarray of shape N x q
-    :param k: number of bins for the discretization
-    :param lag_features: the lag applied on X and conditioning
-    :param lag_target: the lag applied on Y
+    :param features: Sample of a (multivariate) random variable representing the input
+    :type features: np.ndarray of shape (n_samples, n_features)
+    :param features: Sample of a (multivariate) random variable representing the target
+    :type features: np.ndarray of shape (n_samples, n_targets)
+    :param conditioning: Sample of a (multivariate) random variable representing the conditioning
+    :type conditioning: np.ndarray of shape (n_samples, n_conditioning)
+    :param k: number of nearest neighbors for the CMI estimation
+    :type k: int
+    :param lag_features: the lag applied on features and conditioning
+    :type lag_features: int
+    :param lag_target: the lag applied on the target
+    :type lag_target: int
     :param direction: "forward" or "backward"
+    :type direction: str
     :param n_jobs: number of parallel jobs to run
+    :type n_jobs: int
     :return: a dictionary with key = feature index and value = transfer entropy score
     """
     
@@ -139,13 +152,14 @@ def te_fs_forward(
     verbose=1,
     var_names=None,
     n_jobs=1,
-):
+) -> List[IterationResult]:
     """
-    This function returns the selected features starting from an empty array
-    and adding features that have the best CMI score.
+    Perform the forward selection of features based on the Transfer Entropy score.
+
     :param features: features numpy.ndarray object
     :param target: target numpy.ndarray object
-    :param k: number of bins for the discretization
+    :param k: number of nearest neighbors for the CMI estimation
+    :type k: int
     :return: list of indexes of the selected features
     """
 
@@ -231,13 +245,14 @@ def te_fs_backward(
     verbose=1,
     var_names=None,
     n_jobs=1,
-):
+) -> List[IterationResult]:
     """
-    This function returns the selected features starting from the full dataset
-    and removing features keeping the loss of information smaller than the threshold.
+    Perform the backward selection of features based on the Transfer Entropy score
+
     :param features: features numpy.ndarray object
     :param target: target numpy.ndarray object
-    :param k: number of bins for the discretization
+    :param k: number of nearest neighbors for the CMI estimation
+    :type k: int
     :return: list of indexes of the selected features
     """
 
@@ -330,7 +345,8 @@ def fs(
     
     :param features: features numpy.ndarray object
     :param target: target numpy.ndarray object
-    :param k: number of bins for the discretization
+    :param k: number of nearest neighbors for the CMI estimation
+    :type k: int
     :param direction: 'forward' or 'backward' selection
     :param lag_features: lag of features for TE calculation
     :param lag_target: lag of target for TE calculation

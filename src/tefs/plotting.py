@@ -5,7 +5,15 @@ import pandas as pd
 import seaborn as sns
 
 
-def list_of_dicts_to_dataframe(data: List[dict]):
+def list_of_dicts_to_dataframe(data: List[dict]) -> pd.DataFrame:
+    """
+    Helper function to convert a list of dictionaries to a pandas DataFrame, used to plot the results of the TE estimation.
+
+    :param data: A list of dictionaries with the results of the TE estimation.
+    :type data: List[dict]
+    :return: A pandas DataFrame with the results of the TE estimation.
+    :rtype: pd.DataFrame
+    """
     # Get a list of unique keys to create columns in the DataFrame
     unique_keys = set(key for d in data for key in d["feature_scores"].keys())
 
@@ -29,6 +37,16 @@ def list_of_dicts_to_dataframe(data: List[dict]):
 
 
 def plot_te_results(scores_iterations: List[dict], var_names: List[str], ax):
+    """
+    Plot the results of the TE estimation for each iteration.
+
+    :param scores_iterations: A list of dictionaries with the results of the TE estimation.
+    :type scores_iterations: List[dict]
+    :param var_names: A list of variable names.
+    :type var_names: List[str]
+    :param ax: The axis to plot the results on.
+    :type ax: matplotlib.axes.Axes
+    """
     df = list_of_dicts_to_dataframe(scores_iterations)
 
     # Melt the DataFrame to convert columns to a 'variable' and 'value' format
