@@ -3,7 +3,9 @@
 % You can adapt this file completely to your liking, but it should at least
 % contain the root `toctree` directive.
 
-# Welcome to Transfer Entropy Feature Selection's documentation!
+```{include} ../../README.md
+:relative-images:
+```
 
 ```{toctree}
 :caption: 'Contents:'
@@ -17,24 +19,3 @@ notebooks/usage
 
 - {ref}`genindex`
 - {ref}`modindex`
-- {ref}`search`
-
-```{include} ../../README.md
-:relative-images:
-```
-
-```{warning}
-Library under heavy development
-```
-
-```{note}
-This is a note
-```
-
-```{seealso}
-See also
-```
-
-```python
-pip install numpy
-```
