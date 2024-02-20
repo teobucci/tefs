@@ -1,7 +1,6 @@
 import numpy as np
 from .utils import shift_data_up  # Util functions might be needed for internal operations
 
-from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 
 import pandas as pd
