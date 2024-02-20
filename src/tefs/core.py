@@ -14,13 +14,13 @@ IterationResult = Dict[str, Union[Dict[int, float], float]]
 
 
 def compute_transfer_entropy(
-        X,
-        Y,
-        Z,
-        k,
-        lag_features=1,
-        lag_target=1,
-        lag_conditioning=None
+        X: np.ndarray,
+        Y: np.ndarray,
+        Z: np.ndarray,
+        k: int,
+        lag_features: List[int] = [1],
+        lag_target: List[int] = [1],
+        lag_conditioning = None,
         ) -> float:
     """
     Computes the conditional transfer entropy from X to Y given Z, using the specified lags.
@@ -32,8 +32,11 @@ def compute_transfer_entropy(
     :param Z: Sample of a (multivariate) random variable representing the conditioning
     :type Z: np.ndarray of shape (n_samples, n_conditioning)
     :param lag_features: the lag applied on X
+    :type lag_features: List[int]
     :param lag_target: the lag applied on Y
+    :type lag_target: List[int]
     :param lag_conditioning: the lag applied on Z, if None it is set to lag_features
+    :type lag_conditioning: List[int]
     :return: a scalar of the value of the transfer entropy
     """
 
@@ -47,34 +50,21 @@ def compute_transfer_entropy(
     if Z.ndim == 1:
         Z = Z.reshape(-1, 1)
 
-    max_lag = max(lag_features, lag_target, lag_conditioning)
-
-    n_timesteps = X.shape[0]
-    n_features = X.shape[1]
-    n_targets = Y.shape[1]
-    n_conditioning = Z.shape[1]
+    max_lag = max(max(lag_features), max(lag_target), max(lag_conditioning))
 
     # Filling member1
-    member1 = np.zeros((n_timesteps - max_lag, n_features * lag_features))
-    for feature in range(n_features):
-        for lag in range(lag_features):
-            member1[:, feature * lag_features + lag] = X[max_lag - (lag + 1) : -(lag + 1), feature]
+    member1 = np.hstack([X[max_lag - lag : -lag, :] for lag in lag_features])
 
     # Filling member2
-    member2 = np.zeros((n_timesteps - max_lag, n_targets))
-    for target in range(n_targets):
-        member2[:, target] = Y[max_lag:, target]
+    member2 = np.hstack(Y[max_lag:, :])
 
-    # Filling member3 (the conditioning set)
-    member3 = np.zeros((n_timesteps - max_lag, n_targets * lag_target + n_conditioning * lag_conditioning))
-    # Filling the part relative the past of the target
-    for target in range(n_targets):
-        for lag in range(lag_target):
-            member3[:, target * lag_target + lag] = Y[max_lag - (lag + 1) : -(lag + 1), target]
-    # filling the part relative the past of the conditioning features
-    for conditioning_feature in range(n_conditioning):
-        for lag in range(lag_conditioning):
-            member3[:, n_targets * lag_target + conditioning_feature * lag_conditioning + lag] = Z[max_lag - (lag + 1) : -(lag + 1), conditioning_feature]
+    # Filling member3
+    member3 = np.hstack([
+        # Filling the part relative the past of the target
+        *[Y[max_lag - lag : -lag, :] for lag in lag_target],
+        # Filling the part relative the past of the conditioning features
+        *[Z[max_lag - lag : -lag, :] for lag in lag_conditioning],
+    ])
 
     return estimate_cmi(member1, member2, member3, k)
 
