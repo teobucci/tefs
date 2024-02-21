@@ -1,19 +1,20 @@
+from .types import IterationResult
 from typing import List
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib
 
 
 def list_of_dicts_to_dataframe(
-        data: List[dict],
+        data: List[IterationResult],
         ) -> pd.DataFrame:
     """
     Helper function to convert a list of dictionaries to a pandas DataFrame, used to plot the results of the TE estimation.
 
-    :param data: A list of dictionaries with the results of the TE estimation.
-    :type data: List[dict]
+    :param data: A list of results of the TE scores, one per iteration.
+    :type data: List[IterationResult]
     :return: A pandas DataFrame with the results of the TE estimation.
     :rtype: pd.DataFrame
     """
@@ -40,15 +41,15 @@ def list_of_dicts_to_dataframe(
 
 
 def plot_te_results(
-        scores_iterations: List[dict],
+        scores_iterations: List[IterationResult],
         var_names: List[str],
         ax: matplotlib.axes.Axes,
         ) -> None:
     """
     Plot the results of the TE estimation for each iteration.
 
-    :param scores_iterations: A list of dictionaries with the results of the TE estimation.
-    :type scores_iterations: List[dict]
+    :param scores_iterations: A list of results of the TE scores, one per iteration.
+    :type scores_iterations: List[IterationResult]
     :param var_names: A list of variable names.
     :type var_names: List[str]
     :param ax: The axis to plot the results on.
@@ -75,7 +76,7 @@ def plot_te_results(
         markers=["o"] * len(unique_categories),
         style="Variable",
         dashes=False,
-        ax=ax
+        ax=ax,
     )
 
     # Add labels and title

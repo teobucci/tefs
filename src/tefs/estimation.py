@@ -7,11 +7,11 @@ from scipy.special import digamma
 # - https://github.com/syanga/pycit/blob/master/pycit/estimators/mixed_cmi.py
 # - https://github.com/wgao9/knnie/blob/master/knnie.py
 def estimate_mi(
-        X,
-        Y,
-        k=5,
-        estimation_method="digamma",
-        ):
+        X: np.ndarray,
+        Y: np.ndarray,
+        k: int = 5,
+        estimation_method: str = "digamma",
+        ) -> float:
     """
     Estimate the Mutual Information (MI) between :math:`X` and :math:`Y`, i.e. :math:`I(X;Y)`, based on *Mixed Random Variable Mutual Information Estimator - Gao et al.*.
 
@@ -59,12 +59,12 @@ def estimate_mi(
         k_hat, n_xi, n_yi = k, k, k
         
         if knn_distances[i] <= 1e-15:
-            # punti a distanza inferiore o uguale a (quasi) 0
+            # Points at a distance less than or equal to (nearly) 0
             k_hat = len(tree_xy.query_ball_point(dataset[i], 1e-15, p=float("inf")))
             n_xi = len(tree_x.query_ball_point(X[i], 1e-15, p=float("inf")))
             n_yi = len(tree_y.query_ball_point(Y[i], 1e-15, p=float("inf")))
         else:
-            # punti a distanza inferiore o uguale a rho
+            # Points at distances less than or equal to rho
             k_hat = k
             n_xi = len(tree_x.query_ball_point(X[i], knn_distances[i] - 1e-15, p=float("inf")))
             n_yi = len(tree_y.query_ball_point(Y[i], knn_distances[i] - 1e-15, p=float("inf")))
@@ -78,12 +78,12 @@ def estimate_mi(
 
 
 def estimate_cmi(
-        X,
-        Y,
-        Z,
-        k=5,
-        estimation_method="digamma",
-        ):
+        X: np.ndarray,
+        Y: np.ndarray,
+        Z: np.ndarray,
+        k: int = 5,
+        estimation_method: str = "digamma",
+        ) -> float:
     """
     Estimate the Conditional Mutual Information (CMI) between :math:`X` and :math:`Y` given :math:`Z`, i.e. :math:`I(X;Y \mid Z)`, using the equivalance
 

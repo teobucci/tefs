@@ -6,10 +6,8 @@ import pandas as pd
 
 from .estimation import estimate_cmi
 
-from typing import Dict, Union, List
-
-IterationResult = Dict[str, Union[Dict[int, float], float]]
-
+from .types import IterationResult
+from typing import List
 
 
 def compute_transfer_entropy(
@@ -19,7 +17,7 @@ def compute_transfer_entropy(
         k: int,
         lag_features: List[int] = [1],
         lag_target: List[int] = [1],
-        lag_conditioning = None,
+        lag_conditioning: List[int] = None,
         ) -> float:
     """
     Computes the conditional transfer entropy from X to Y given Z, using the specified lags.
@@ -68,31 +66,31 @@ def compute_transfer_entropy(
     return estimate_cmi(member1, member2, member3, k)
 
 def score_features(
-        features,
-        target,
-        conditioning,
-        k,
-        lag_features,
-        lag_target,
-        direction,
-        n_jobs=1
+        features: np.ndarray,
+        target: np.ndarray,
+        conditioning: np.ndarray,
+        k: int,
+        lag_features: list[int],
+        lag_target: list[int],
+        direction: str,
+        n_jobs=1,
         ) -> np.ndarray:
     """
     Computes the transfer entropy score for each feature :math:`X_i` in :math:`X`, to the target :math:`Y`, given the conditioning set :math:`X_A`.
 
     :param features: Sample of a (multivariate) random variable representing the input
     :type features: np.ndarray of shape (n_samples, n_features)
-    :param features: Sample of a (multivariate) random variable representing the target
-    :type features: np.ndarray of shape (n_samples, n_targets)
+    :param target: Sample of a (multivariate) random variable representing the target
+    :type target: np.ndarray of shape (n_samples, n_targets)
     :param conditioning: Sample of a (multivariate) random variable representing the conditioning
     :type conditioning: np.ndarray of shape (n_samples, n_conditioning)
     :param k: number of nearest neighbors for the CMI estimation
     :type k: int
-    :param lag_features: the lag applied on features and conditioning
-    :type lag_features: int
-    :param lag_target: the lag applied on the target
-    :type lag_target: int
-    :param direction: "forward" or "backward"
+    :param lag_features: the lags applied on features and conditioning
+    :type lag_features: list[int]
+    :param lag_target: the lags applied on the target
+    :type lag_target: list[int]
+    :param direction: the direction of the transfer entropy, either "forward" or "backward"
     :type direction: str
     :param n_jobs: number of parallel jobs to run
     :type n_jobs: int
@@ -132,23 +130,36 @@ def score_features_parallel(args):
     return compute_transfer_entropy(*args)
 
 def te_fs_forward(
-        features,
-        target,
-        k,
-        lag_features=1,
-        lag_target=1,
-        verbose=1,
-        var_names=None,
-        n_jobs=1,
+        features: np.ndarray,
+        target: np.ndarray,
+        k: int,
+        lag_features: list[int],
+        lag_target: list[int],
+        verbose: int = 1,
+        var_names: list[str] = None,
+        n_jobs: int = 1,
         ) -> List[IterationResult]:
     """
     Perform the forward selection of features based on the Transfer Entropy score.
 
-    :param features: features numpy.ndarray object
-    :param target: target numpy.ndarray object
+    :param features: Sample of a (multivariate) random variable representing the input
+    :type features: np.ndarray of shape (n_samples, n_features)
+    :param target: Sample of a (multivariate) random variable representing the target
+    :type target: np.ndarray of shape (n_samples, n_targets)
     :param k: number of nearest neighbors for the CMI estimation
     :type k: int
+    :param lag_features: the lags applied on features and conditioning
+    :type lag_features: list[int]
+    :param lag_target: the lags applied on the target
+    :type lag_target: list[int]
+    :param verbose: verbosity level
+    :type verbose: int
+    :param var_names: names of the variables/features
+    :type var_names: list[str]
+    :param n_jobs: number of parallel jobs to run
+    :type n_jobs: int
     :return: list of indexes of the selected features
+    :rtype: List[IterationResult]
     """
 
     df = pd.DataFrame(features)
@@ -225,23 +236,36 @@ def te_fs_forward(
     return results
 
 def te_fs_backward(
-        features,
-        target,
-        k,
-        lag_features=1,
-        lag_target=1,
-        verbose=1,
-        var_names=None,
-        n_jobs=1,
+        features: np.ndarray,
+        target: np.ndarray,
+        k: int,
+        lag_features: list[int],
+        lag_target: list[int],
+        verbose: int = 1,
+        var_names: list[str] = None,
+        n_jobs: int = 1,
         ) -> List[IterationResult]:
     """
     Perform the backward selection of features based on the Transfer Entropy score
 
-    :param features: features numpy.ndarray object
-    :param target: target numpy.ndarray object
+    :param features: Sample of a (multivariate) random variable representing the input
+    :type features: np.ndarray of shape (n_samples, n_features)
+    :param target: Sample of a (multivariate) random variable representing the target
+    :type target: np.ndarray of shape (n_samples, n_targets)
     :param k: number of nearest neighbors for the CMI estimation
     :type k: int
+    :param lag_features: the lags applied on features and conditioning
+    :type lag_features: list[int]
+    :param lag_target: the lags applied on the target
+    :type lag_target: list[int]
+    :param verbose: verbosity level
+    :type verbose: int
+    :param var_names: names of the variables/features
+    :type var_names: list[str]
+    :param n_jobs: number of parallel jobs to run
+    :type n_jobs: int
     :return: list of indexes of the selected features
+    :rtype: List[IterationResult]
     """
 
     df = pd.DataFrame(features)
@@ -318,30 +342,37 @@ def te_fs_backward(
     return results
 
 def fs(
-        features,
-        target,
-        k,
-        direction,
-        lag_features=1,
-        lag_target=1,
-        verbose=1,
-        var_names=None,
-        n_jobs=1,
-        ):
+        features: np.ndarray,
+        target: np.ndarray,
+        k: int,
+        lag_features: list[int],
+        lag_target: list[int],
+        direction: str,
+        verbose: int = 1,
+        var_names: list[str] = None,
+        n_jobs: int = 1,
+        ) -> List[IterationResult]:
     """
-    This function selects features either by forward or backward selection based on the Transfer Entropy score.
+    Perform the forward or backward feature selection based on the Transfer Entropy score.
     
-    :param features: features numpy.ndarray object
-    :param target: target numpy.ndarray object
+    :param features: Sample of a (multivariate) random variable representing the input
+    :type features: np.ndarray of shape (n_samples, n_features)
+    :param target: Sample of a (multivariate) random variable representing the target
+    :type target: np.ndarray of shape (n_samples, n_targets)
     :param k: number of nearest neighbors for the CMI estimation
     :type k: int
-    :param direction: 'forward' or 'backward' selection
-    :param lag_features: lag of features for TE calculation
-    :param lag_target: lag of target for TE calculation
+    :param lag_features: the lags applied on features and conditioning
+    :type lag_features: list[int]
+    :param lag_target: the lags applied on the target
+    :type lag_target: list[int]
     :param verbose: verbosity level
+    :type verbose: int
     :param var_names: names of the variables/features
+    :type var_names: list[str]
     :param n_jobs: number of jobs for parallel computation
+    :type n_jobs: int
     :return: list of indexes of the selected features
+    :rtype: List[IterationResult]
     """
     
     # Validate direction argument

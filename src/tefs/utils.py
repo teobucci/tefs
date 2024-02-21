@@ -1,8 +1,5 @@
-from typing import Dict, List, Union
-
-import pandas as pd
-
-IterationResult = Dict[str, Union[Dict[int, float], float]]
+from .types import IterationResult
+from typing import List
 
 
 def select_features(
