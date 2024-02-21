@@ -4,27 +4,6 @@ import pandas as pd
 
 IterationResult = Dict[str, Union[Dict[int, float], float]]
 
-# Possible import of core functions if utilities manipulate their outputs directly
-
-def shift_data_up(
-        data: pd.DataFrame,
-        exclude: list[str]
-        ) -> pd.DataFrame:
-    """
-    Shifts all the rows up by 1, except the ones in the `exclude` list.
-    Note: we lose the first row and the last row.
-
-    :param data: The input data.
-
-    """
-    data_shifted_up = data.copy()
-    for col in data.columns:
-        if col not in exclude:
-            data_shifted_up[col] = data_shifted_up[col].shift(-1)
-
-    # last row might contain NaNs
-    data_shifted_up = data_shifted_up.dropna()
-    return data_shifted_up
 
 def select_features(
         results: List[IterationResult],
