@@ -50,7 +50,7 @@ def compute_transfer_entropy(
     max_lag = max(max(lag_features), max(lag_target), max(lag_conditioning))
 
     # Filling member1
-    member1 = np.hstack([X[max_lag - lag : -lag, :] for lag in lag_features])
+    member1 = np.hstack([X[max_lag - lag : X.shape[0]-lag, :] for lag in lag_features])
 
     # Filling member2
     member2 = np.hstack(Y[max_lag:, :])
@@ -58,9 +58,9 @@ def compute_transfer_entropy(
     # Filling member3
     member3 = np.hstack([
         # Filling the part relative the past of the target
-        *[Y[max_lag - lag : -lag, :] for lag in lag_target],
+        *[Y[max_lag - lag : Y.shape[0]-lag, :] for lag in lag_target],
         # Filling the part relative the past of the conditioning features
-        *[Z[max_lag - lag : -lag, :] for lag in lag_conditioning],
+        *[Z[max_lag - lag : Z.shape[0]-lag, :] for lag in lag_conditioning],
     ])
 
     return estimate_cmi(member1, member2, member3, k)
