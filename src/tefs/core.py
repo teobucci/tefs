@@ -53,7 +53,7 @@ def compute_transfer_entropy(
     member1 = np.hstack([X[max_lag - lag : X.shape[0]-lag, :] for lag in lag_features])
 
     # Filling member2
-    member2 = np.hstack(Y[max_lag:, :])
+    member2 = Y[max_lag:, :]
 
     # Filling member3
     member3 = np.hstack([
