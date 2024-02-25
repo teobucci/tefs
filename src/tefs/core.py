@@ -379,7 +379,7 @@ def fs(
     if direction not in ['forward', 'backward']:
         raise ValueError("direction must be either 'forward' or 'backward'")
     
-    if not len(var_names) == features.shape[1]:
+    if var_names and not len(var_names) == features.shape[1]:
         raise ValueError("var_names must have the same length as the number of features")
 
     # Prepare common arguments for both functions
