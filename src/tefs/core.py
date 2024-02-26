@@ -56,7 +56,7 @@ class TEFS:
             raise ValueError("var_names must have the same length as the number of features")
         
         if var_names is None:
-            var_names = [f"Feature {i}" for i in range(features.shape[1])]
+            var_names = [f"{i+1}" for i in range(features.shape[1])]
         
         self.features = features
         self.target = target
@@ -108,15 +108,21 @@ class TEFS:
         candidate_features = list(range(self.features.shape[1]))
         TE_cumulated = 0
         results = []
+        iteration_count = 1
 
         while True:
+
             # check that there are still features to add
             if len(candidate_features) == 0:
                 break
 
             if self.verbose >= 2:
-                print(f"candidate_features: {candidate_features}")
-                print(f"selected_features: {selected_features}")
+                print(f"Iteration {iteration_count}")
+                iteration_count += 1
+
+            if self.verbose >= 2:
+                print(f"Candidate Features: {[self.var_names[i] for i in candidate_features]}")
+                print(f"Selected Features: {[self.var_names[i] for i in selected_features]}")
 
             # compute the TE scores for each feature
             feature_scores = score_features(
@@ -138,8 +144,9 @@ class TEFS:
 
             # print the scores
             if self.verbose >= 2:
+                print(f"TE_cumulated: {TE_cumulated}")
                 for key, value in feature_scores.items():
-                    print(f"Feature {key} has Transfer Entropy score on the target: {value}")
+                    print(f"TE score of feature {self.var_names[key]}: {value}")
 
             # sort the scores in descending order by value
             feature_scores = dict(sorted(feature_scores.items(), key=lambda item: item[1], reverse=True))
@@ -154,25 +161,19 @@ class TEFS:
             # by checking before selection of the feature
             # I DON'T make sure that at least one feature is selected
 
-            if self.verbose >= 2:
-                print(f"TE_cumulated: {TE_cumulated}")
-                print("-" * 50)
-
             results.append({"feature_scores": feature_scores, "TE": TE_cumulated})
 
-            if self.verbose >= 2:
-                print("Details of the maximum feature:")
-                print(f"max_feature_index: {max_feature_index}")
-                print(f"max_TE: {max_TE}")
-
             if self.verbose >= 1 and self.var_names is not None:
-                print(f"Adding feature: {self.var_names[max_feature_index]} with TE score: {max_TE}")
+                print(f"Adding feature {self.var_names[max_feature_index]} with TE score: {max_TE}")
 
             # add the feature to the selected features list
             selected_features.append(max_feature_index)
 
             # remove the feature from the candidate features list
             candidate_features.remove(max_feature_index)
+
+            if self.verbose >= 2:
+                print("-" * 80)
 
         self.result = results
     
@@ -186,6 +187,7 @@ class TEFS:
         candidate_features = list(range(self.features.shape[1]))
         TE_loss = 0
         results = []
+        iteration_count = 1
 
         while True:
             # check that there are still features to remove
@@ -193,8 +195,12 @@ class TEFS:
                 break
 
             if self.verbose >= 2:
-                print(f"candidate_features: {candidate_features}")
-                print(f"selected_features: {selected_features}")
+                print(f"Iteration {iteration_count}")
+                iteration_count += 1
+
+            if self.verbose >= 2:
+                print(f"Candidate Features: {[self.var_names[i] for i in candidate_features]}")
+                print(f"Selected Features: {[self.var_names[i] for i in selected_features]}")
 
             # compute the TE scores for each feature
             feature_scores = score_features(
@@ -219,8 +225,9 @@ class TEFS:
 
             # print the scores
             if self.verbose >= 2:
+                print(f"TE_loss: {TE_loss}")
                 for key, value in feature_scores.items():
-                    print(f"Feature {key} has Transfer Entropy score on the target: {value}")
+                    print(f"TE score of feature {self.var_names[key]}: {value}")
 
             # find the first key value pair in the dictionary
             min_feature_index = int(next(iter(feature_scores)))
@@ -229,28 +236,22 @@ class TEFS:
             # increase the cumulative loss of information
             TE_loss += max(min_TE, 0)
 
-            if self.verbose >= 2:
-                print(f"TE_loss: {TE_loss}")
-                print("-" * 50)
-
             results.append({"feature_scores": feature_scores, "TE": TE_loss})
 
             # by checking after the removal of the feature
             # I make it possible to not remove any feature
 
-            if self.verbose >= 2:
-                print("Details of the minimum feature:")
-                print(f"min_feature_index: {min_feature_index}")
-                print(f"min_TE: {min_TE}")
-
             if self.verbose >= 1 and self.var_names is not None:
-                print(f"Removing feature: {self.var_names[min_feature_index]} with TE score: {min_TE}")
+                print(f"Removing feature {self.var_names[min_feature_index]} with TE score: {min_TE}")
 
             # add the feature to the selected features list
             selected_features.append(min_feature_index)
 
             # remove the feature from the candidate features list
             candidate_features.remove(min_feature_index)
+
+            if self.verbose >= 2:
+                print("-" * 80)
 
         self.result = results
 
