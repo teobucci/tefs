@@ -1,69 +1,336 @@
-import numpy as np
-
 from multiprocessing.pool import ThreadPool
-
-import pandas as pd
-
-from .estimation import estimate_cmi
-
-from .types import IterationResult
 from typing import List
 
+import matplotlib
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
-def compute_transfer_entropy(
-        X: np.ndarray,
-        Y: np.ndarray,
-        Z: np.ndarray,
-        k: int,
-        lag_features: List[int] = [1],
-        lag_target: List[int] = [1],
-        lag_conditioning: List[int] = None,
-        ) -> float:
-    """
-    Computes the conditional transfer entropy from X to Y given Z, using the specified lags.
+from .estimation import estimate_conditional_transfer_entropy
+from .types import IterationResult
 
-    :param X: Sample of a (multivariate) random variable representing the input
-    :type X: np.ndarray of shape (n_samples, n_features)
-    :param Y: Sample of a (multivariate) random variable representing the target
-    :type Y: np.ndarray of shape (n_samples, n_targets)
-    :param Z: Sample of a (multivariate) random variable representing the conditioning
-    :type Z: np.ndarray of shape (n_samples, n_conditioning)
-    :param lag_features: the lag applied on X
-    :type lag_features: List[int]
-    :param lag_target: the lag applied on Y
-    :type lag_target: List[int]
-    :param lag_conditioning: the lag applied on Z, if None it is set to lag_features
-    :type lag_conditioning: List[int]
-    :return: a scalar of the value of the transfer entropy
-    """
 
-    if lag_conditioning is None:
-        lag_conditioning = lag_features
+class TEFS:
+    def __init__(
+            self,
+            features: np.ndarray,
+            target: np.ndarray,
+            k: int,
+            lag_features: list[int],
+            lag_target: list[int],
+            direction: str,
+            verbose: int = 1,
+            var_names: list[str] = None,
+            n_jobs: int = 1,
+            ) -> List[IterationResult]:
+        """
+        Perform the forward or backward feature selection based on the Transfer Entropy score.
+
+        :param features: Sample of a (multivariate) random variable representing the input
+        :type features: np.ndarray of shape (n_samples, n_features)
+        :param target: Sample of a (multivariate) random variable representing the target
+        :type target: np.ndarray of shape (n_samples, n_targets)
+        :param k: number of nearest neighbors for the CMI estimation
+        :type k: int
+        :param lag_features: the lags applied on features and conditioning
+        :type lag_features: list[int]
+        :param lag_target: the lags applied on the target
+        :type lag_target: list[int]
+        :param direction: the direction of the transfer entropy, either "forward" or "backward"
+        :type direction: str
+        :param verbose: verbosity level
+        :type verbose: int
+        :param var_names: names of the variables/features
+        :type var_names: list[str]
+        :param n_jobs: number of parallel jobs to run
+        :type n_jobs: int
+        :return: list of indexes of the selected features
+        :rtype: List[IterationResult]
+        """
+
+        # Validate direction argument
+        if direction not in ['forward', 'backward']:
+            raise ValueError("direction must be either 'forward' or 'backward'")
+
+        if var_names and not len(var_names) == features.shape[1]:
+            raise ValueError("var_names must have the same length as the number of features")
+        
+        if var_names is None:
+            var_names = [f"Feature {i}" for i in range(features.shape[1])]
+        
+        self.features = features
+        self.target = target
+        self.k = k
+        self.lag_features = lag_features
+        self.lag_target = lag_target
+        self.direction = direction
+        self.verbose = verbose
+        self.var_names = var_names
+        self.n_jobs = n_jobs
+        self.result = None
     
-    if X.ndim == 1:
-        X = X.reshape(-1, 1)
-    if Y.ndim == 1:
-        Y = Y.reshape(-1, 1)
-    if Z.ndim == 1:
-        Z = Z.reshape(-1, 1)
+    def get_result(self) -> List[IterationResult]:
+        """
+        Return the result of the feature selection algorithm.
+        """
+        if self.result is None:
+            raise ValueError("The feature selection algorithm has not been run yet")
+        
+        return self.result
+    
+    def __repr__(self) -> str:
+        return f"TEFS(features={self.features}, target={self.target}, k={self.k}, lag_features={self.lag_features}, lag_target={self.lag_target}, direction={self.direction}, verbose={self.verbose}, var_names={self.var_names}, n_jobs={self.n_jobs})"
 
-    max_lag = max(max(lag_features), max(lag_target), max(lag_conditioning))
+    def fit(self) -> None:
+        """
+        Run the feature selection algorithm and return the results.
+        """
 
-    # Filling member1
-    member1 = np.hstack([X[max_lag - lag : X.shape[0]-lag, :] for lag in lag_features])
+        if self.result is not None:
+            raise ValueError("The feature selection algorithm has already been run")
+        
+        # Call the appropriate function based on the direction
+        if self.direction == 'forward':
+            return self.__tefs_forward()
+        else:
+            return self.__tefs_backward()
+        
+    def __tefs_forward(self) -> None:
+        """
+        Perform the forward selection of features based on the Transfer Entropy score.
 
-    # Filling member2
-    member2 = Y[max_lag:, :]
+        :return: list of indexes of the selected features
+        :rtype: List[IterationResult]
+        """
 
-    # Filling member3
-    member3 = np.hstack([
-        # Filling the part relative the past of the target
-        *[Y[max_lag - lag : Y.shape[0]-lag, :] for lag in lag_target],
-        # Filling the part relative the past of the conditioning features
-        *[Z[max_lag - lag : Z.shape[0]-lag, :] for lag in lag_conditioning],
-    ])
+        df = pd.DataFrame(self.features)
+        selected_features = list()
+        candidate_features = list(range(self.features.shape[1]))
+        TE_cumulated = 0
+        results = []
 
-    return estimate_cmi(member1, member2, member3, k)
+        while True:
+            # check that there are still features to add
+            if len(candidate_features) == 0:
+                break
+
+            if self.verbose >= 2:
+                print(f"candidate_features: {candidate_features}")
+                print(f"selected_features: {selected_features}")
+
+            # compute the TE scores for each feature
+            feature_scores = score_features(
+                features=df[candidate_features].values,
+                target=self.target,
+                conditioning=df[selected_features].values,
+                k=self.k,
+                lag_features=self.lag_features,
+                lag_target=self.lag_target,
+                direction="forward",
+                n_jobs=self.n_jobs,
+            )
+
+            # i assume features_scores to be a dict wit
+            # key = feature index and value = TE score
+            # ex: {0: -0.5, 1: 0.5, 2: 0.7}
+
+            feature_scores = dict(zip(df[candidate_features].columns, feature_scores))
+
+            # print the scores
+            if self.verbose >= 2:
+                for key, value in feature_scores.items():
+                    print(f"Feature {key} has Transfer Entropy score on the target: {value}")
+
+            # sort the scores in descending order by value
+            feature_scores = dict(sorted(feature_scores.items(), key=lambda item: item[1], reverse=True))
+
+            # find the first key value pair in the dictionary
+            max_feature_index = int(next(iter(feature_scores)))
+            max_TE = next(iter(feature_scores.values()))
+
+            # increase the cumulative loss of information
+            TE_cumulated += max(max_TE, 0)
+
+            # by checking before selection of the feature
+            # I DON'T make sure that at least one feature is selected
+
+            if self.verbose >= 2:
+                print(f"TE_cumulated: {TE_cumulated}")
+                print("-" * 50)
+
+            results.append({"feature_scores": feature_scores, "TE": TE_cumulated})
+
+            if self.verbose >= 2:
+                print("Details of the maximum feature:")
+                print(f"max_feature_index: {max_feature_index}")
+                print(f"max_TE: {max_TE}")
+
+            if self.verbose >= 1 and self.var_names is not None:
+                print(f"Adding feature: {self.var_names[max_feature_index]} with TE score: {max_TE}")
+
+            # add the feature to the selected features list
+            selected_features.append(max_feature_index)
+
+            # remove the feature from the candidate features list
+            candidate_features.remove(max_feature_index)
+
+        self.result = results
+    
+    def __tefs_backward(self) -> None:
+        """
+        Perform the backward selection of features based on the Transfer Entropy score.
+        """
+
+        df = pd.DataFrame(self.features)
+        selected_features = list()
+        candidate_features = list(range(self.features.shape[1]))
+        TE_loss = 0
+        results = []
+
+        while True:
+            # check that there are still features to remove
+            if len(candidate_features) == 0:
+                break
+
+            if self.verbose >= 2:
+                print(f"candidate_features: {candidate_features}")
+                print(f"selected_features: {selected_features}")
+
+            # compute the TE scores for each feature
+            feature_scores = score_features(
+                features=df[candidate_features].values,
+                target=self.target,
+                conditioning=df[candidate_features].values,
+                k=self.k,
+                lag_features=self.lag_features,
+                lag_target=self.lag_target,
+                direction="backward",
+                n_jobs=self.n_jobs,
+            )
+
+            # i assume features_scores to be a dict wit
+            # key = feature index and value = TE score
+            # ex: {0: -0.5, 1: 0.5, 2: 0.7}
+
+            feature_scores = dict(zip(df[candidate_features].columns, feature_scores))
+
+            # sort the scores in descending order by value
+            feature_scores = dict(sorted(feature_scores.items(), key=lambda item: item[1], reverse=False))
+
+            # print the scores
+            if self.verbose >= 2:
+                for key, value in feature_scores.items():
+                    print(f"Feature {key} has Transfer Entropy score on the target: {value}")
+
+            # find the first key value pair in the dictionary
+            min_feature_index = int(next(iter(feature_scores)))
+            min_TE = next(iter(feature_scores.values()))
+
+            # increase the cumulative loss of information
+            TE_loss += max(min_TE, 0)
+
+            if self.verbose >= 2:
+                print(f"TE_loss: {TE_loss}")
+                print("-" * 50)
+
+            results.append({"feature_scores": feature_scores, "TE": TE_loss})
+
+            # by checking after the removal of the feature
+            # I make it possible to not remove any feature
+
+            if self.verbose >= 2:
+                print("Details of the minimum feature:")
+                print(f"min_feature_index: {min_feature_index}")
+                print(f"min_TE: {min_TE}")
+
+            if self.verbose >= 1 and self.var_names is not None:
+                print(f"Removing feature: {self.var_names[min_feature_index]} with TE score: {min_TE}")
+
+            # add the feature to the selected features list
+            selected_features.append(min_feature_index)
+
+            # remove the feature from the candidate features list
+            candidate_features.remove(min_feature_index)
+
+        self.result = results
+
+    def plot_te_results(
+            self,
+            ax: matplotlib.axes.Axes,
+            ) -> None:
+        """
+        Plot the results of the TE estimation for each iteration.
+
+        :param scores_iterations: A list of results of the TE scores, one per iteration.
+        :type scores_iterations: list[IterationResult]
+        :param var_names: A list of variable names.
+        :type var_names: list[str]
+        :param ax: The axis to plot the results on.
+        :type ax: matplotlib.axes.Axes
+        """
+
+        if self.result is None:
+            raise ValueError("The feature selection algorithm has not been run yet")
+
+        # Get a list of unique keys to create columns in the DataFrame
+        unique_keys = set(key for d in self.result for key in d["feature_scores"].keys())
+
+        # Initialize an empty list to store records with NaN values
+        records_with_nan = []
+
+        # Iterate through the dictionaries and create records with NaN values
+        for d in self.result:
+            record = {}
+            for key in unique_keys:
+                record[key] = d["feature_scores"].get(key, np.nan)
+            records_with_nan.append(record)
+
+        # Create the DataFrame from the records list
+        df = pd.DataFrame.from_records(records_with_nan)
+
+        # Add a column with the iteration number
+        df["iteration"] = df.index + 1
+
+        # Melt the DataFrame to convert columns to a 'variable' and 'value' format
+        melted_data = pd.melt(df, id_vars=["iteration"], var_name="Variable", value_name="Value")
+
+        # Map variable names to more readable names
+        if self.var_names is not None:
+            melted_data["Variable"] = melted_data["Variable"].map(dict(enumerate(self.var_names)))
+
+        # Get the unique categories in the "Variable" column
+        unique_categories = melted_data["Variable"].unique()
+
+        # Create a line plot for each line using Seaborn
+        sns.set_theme(style="whitegrid")
+        sns.lineplot(
+            data=melted_data,
+            x="iteration",
+            y="Value",
+            hue="Variable",
+            markers=["o"] * len(unique_categories),
+            style="Variable",
+            dashes=False,
+            ax=ax,
+        )
+
+        # Add labels and title
+        ax.set_xlabel("Iteration")
+        ax.set_ylabel("TE score on target")
+        ax.set_title("TE score on target for each iteration")
+
+        # Add horizontal line in 0, thick and red
+        ax.axhline(y=0, color="r", linestyle="--", linewidth=3)
+
+        # Get unique x values with data
+        x_values_with_data = melted_data["iteration"].unique()
+
+        # Customize x-axis ticks to display only when there is data
+        ax.set_xticks(x_values_with_data)
+
+        # Show the plot
+        ax.legend(title="Variables", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+
 
 def score_features(
         features: np.ndarray,
@@ -127,275 +394,5 @@ def score_features_parallel(args):
     """
     Helper function to compute the score of a single feature in parallel.
     """
-    return compute_transfer_entropy(*args)
+    return estimate_conditional_transfer_entropy(*args)
 
-def te_fs_forward(
-        features: np.ndarray,
-        target: np.ndarray,
-        k: int,
-        lag_features: list[int],
-        lag_target: list[int],
-        verbose: int = 1,
-        var_names: list[str] = None,
-        n_jobs: int = 1,
-        ) -> List[IterationResult]:
-    """
-    Perform the forward selection of features based on the Transfer Entropy score.
-
-    :param features: Sample of a (multivariate) random variable representing the input
-    :type features: np.ndarray of shape (n_samples, n_features)
-    :param target: Sample of a (multivariate) random variable representing the target
-    :type target: np.ndarray of shape (n_samples, n_targets)
-    :param k: number of nearest neighbors for the CMI estimation
-    :type k: int
-    :param lag_features: the lags applied on features and conditioning
-    :type lag_features: list[int]
-    :param lag_target: the lags applied on the target
-    :type lag_target: list[int]
-    :param verbose: verbosity level
-    :type verbose: int
-    :param var_names: names of the variables/features
-    :type var_names: list[str]
-    :param n_jobs: number of parallel jobs to run
-    :type n_jobs: int
-    :return: list of indexes of the selected features
-    :rtype: List[IterationResult]
-    """
-
-    df = pd.DataFrame(features)
-    selected_features = list()
-    candidate_features = list(range(features.shape[1]))
-    TE_cumulated = 0
-    results = []
-
-    while True:
-        # check that there are still features to add
-        if len(candidate_features) == 0:
-            break
-
-        if verbose >= 2:
-            print(f"candidate_features: {candidate_features}")
-            print(f"selected_features: {selected_features}")
-
-        # compute the TE scores for each feature
-        feature_scores = score_features(
-            features=df[candidate_features].values,
-            target=target,
-            conditioning=df[selected_features].values,
-            k=k,
-            lag_features=lag_features,
-            lag_target=lag_target,
-            direction="forward",
-            n_jobs=n_jobs,
-        )
-
-        # i assume features_scores to be a dict wit
-        # key = feature index and value = TE score
-        # ex: {0: -0.5, 1: 0.5, 2: 0.7}
-
-        feature_scores = dict(zip(df[candidate_features].columns, feature_scores))
-
-        # print the scores
-        if verbose >= 2:
-            for key, value in feature_scores.items():
-                print(f"Feature {key} has Transfer Entropy score on the target: {value}")
-
-        # sort the scores in descending order by value
-        feature_scores = dict(sorted(feature_scores.items(), key=lambda item: item[1], reverse=True))
-
-        # find the first key value pair in the dictionary
-        max_feature_index = int(next(iter(feature_scores)))
-        max_TE = next(iter(feature_scores.values()))
-
-        # increase the cumulative loss of information
-        TE_cumulated += max(max_TE, 0)
-
-        # by checking before selection of the feature
-        # I DON'T make sure that at least one feature is selected
-
-        if verbose >= 2:
-            print(f"TE_cumulated: {TE_cumulated}")
-            print("-" * 50)
-
-        results.append({"feature_scores": feature_scores, "TE": TE_cumulated})
-
-        if verbose >= 2:
-            print("Details of the maximum feature:")
-            print(f"max_feature_index: {max_feature_index}")
-            print(f"max_TE: {max_TE}")
-
-        if verbose >= 1 and var_names is not None:
-            print(f"Adding feature: {var_names[max_feature_index]} with TE score: {max_TE}")
-
-        # add the feature to the selected features list
-        selected_features.append(max_feature_index)
-
-        # remove the feature from the candidate features list
-        candidate_features.remove(max_feature_index)
-
-    return results
-
-def te_fs_backward(
-        features: np.ndarray,
-        target: np.ndarray,
-        k: int,
-        lag_features: list[int],
-        lag_target: list[int],
-        verbose: int = 1,
-        var_names: list[str] = None,
-        n_jobs: int = 1,
-        ) -> List[IterationResult]:
-    """
-    Perform the backward selection of features based on the Transfer Entropy score
-
-    :param features: Sample of a (multivariate) random variable representing the input
-    :type features: np.ndarray of shape (n_samples, n_features)
-    :param target: Sample of a (multivariate) random variable representing the target
-    :type target: np.ndarray of shape (n_samples, n_targets)
-    :param k: number of nearest neighbors for the CMI estimation
-    :type k: int
-    :param lag_features: the lags applied on features and conditioning
-    :type lag_features: list[int]
-    :param lag_target: the lags applied on the target
-    :type lag_target: list[int]
-    :param verbose: verbosity level
-    :type verbose: int
-    :param var_names: names of the variables/features
-    :type var_names: list[str]
-    :param n_jobs: number of parallel jobs to run
-    :type n_jobs: int
-    :return: list of indexes of the selected features
-    :rtype: List[IterationResult]
-    """
-
-    df = pd.DataFrame(features)
-    selected_features = list()
-    candidate_features = list(range(features.shape[1]))
-    TE_loss = 0
-    results = []
-
-    while True:
-        # check that there are still features to remove
-        if len(candidate_features) == 0:
-            break
-
-        if verbose >= 2:
-            print(f"candidate_features: {candidate_features}")
-            print(f"selected_features: {selected_features}")
-
-        # compute the TE scores for each feature
-        feature_scores = score_features(
-            features=df[candidate_features].values,
-            target=target,
-            conditioning=df[candidate_features].values,
-            k=k,
-            lag_features=lag_features,
-            lag_target=lag_target,
-            direction="backward",
-            n_jobs=n_jobs,
-        )
-
-        # i assume features_scores to be a dict wit
-        # key = feature index and value = TE score
-        # ex: {0: -0.5, 1: 0.5, 2: 0.7}
-
-        feature_scores = dict(zip(df[candidate_features].columns, feature_scores))
-
-        # sort the scores in descending order by value
-        feature_scores = dict(sorted(feature_scores.items(), key=lambda item: item[1], reverse=False))
-
-        # print the scores
-        if verbose >= 2:
-            for key, value in feature_scores.items():
-                print(f"Feature {key} has Transfer Entropy score on the target: {value}")
-
-        # find the first key value pair in the dictionary
-        min_feature_index = int(next(iter(feature_scores)))
-        min_TE = next(iter(feature_scores.values()))
-
-        # increase the cumulative loss of information
-        TE_loss += max(min_TE, 0)
-
-        if verbose >= 2:
-            print(f"TE_loss: {TE_loss}")
-            print("-" * 50)
-
-        results.append({"feature_scores": feature_scores, "TE": TE_loss})
-
-        # by checking after the removal of the feature
-        # I make it possible to not remove any feature
-
-        if verbose >= 2:
-            print("Details of the minimum feature:")
-            print(f"min_feature_index: {min_feature_index}")
-            print(f"min_TE: {min_TE}")
-
-        if verbose >= 1 and var_names is not None:
-            print(f"Removing feature: {var_names[min_feature_index]} with TE score: {min_TE}")
-
-        # add the feature to the selected features list
-        selected_features.append(min_feature_index)
-
-        # remove the feature from the candidate features list
-        candidate_features.remove(min_feature_index)
-
-    return results
-
-def fs(
-        features: np.ndarray,
-        target: np.ndarray,
-        k: int,
-        lag_features: list[int],
-        lag_target: list[int],
-        direction: str,
-        verbose: int = 1,
-        var_names: list[str] = None,
-        n_jobs: int = 1,
-        ) -> List[IterationResult]:
-    """
-    Perform the forward or backward feature selection based on the Transfer Entropy score.
-    
-    :param features: Sample of a (multivariate) random variable representing the input
-    :type features: np.ndarray of shape (n_samples, n_features)
-    :param target: Sample of a (multivariate) random variable representing the target
-    :type target: np.ndarray of shape (n_samples, n_targets)
-    :param k: number of nearest neighbors for the CMI estimation
-    :type k: int
-    :param lag_features: the lags applied on features and conditioning
-    :type lag_features: list[int]
-    :param lag_target: the lags applied on the target
-    :type lag_target: list[int]
-    :param verbose: verbosity level
-    :type verbose: int
-    :param var_names: names of the variables/features
-    :type var_names: list[str]
-    :param n_jobs: number of jobs for parallel computation
-    :type n_jobs: int
-    :return: list of indexes of the selected features
-    :rtype: List[IterationResult]
-    """
-    
-    # Validate direction argument
-    if direction not in ['forward', 'backward']:
-        raise ValueError("direction must be either 'forward' or 'backward'")
-    
-    if var_names and not len(var_names) == features.shape[1]:
-        raise ValueError("var_names must have the same length as the number of features")
-
-    # Prepare common arguments for both functions
-    common_args = {
-        "features": features,
-        "target": target,
-        "k": k,
-        "lag_features": lag_features,
-        "lag_target": lag_target,
-        "verbose": verbose,
-        "var_names": var_names,
-        "n_jobs": n_jobs
-    }
-    
-    # Call the appropriate function based on the direction
-    if direction == 'forward':
-        return te_fs_forward(**common_args)
-    else:  # direction == 'backward'
-        return te_fs_backward(**common_args)
