@@ -47,6 +47,10 @@ docs = [
     "jupyterlab",
     "nbconvert",
 ]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
 
 [tool.bumpver]
 current_version = "0.1.0"
