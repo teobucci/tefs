@@ -27,8 +27,9 @@ classifiers = [
 dependencies = [
     "numpy",
     "pandas",
-    "matplotlib", # Add other dependencies as required
+    "matplotlib",
     "scipy",
+    "seaborn",
 ]
 
 [project.urls]
