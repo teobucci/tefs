@@ -333,6 +333,128 @@ class TEFS:
         ax.legend(title="Variables", bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
 
 
+    def map_output_to_var_names(method):
+        """
+        A decorator that modifies the output of the decorated method. 
+        Assumes the method returns a list of indices and uses these 
+        indices to return the corresponding values from self.var_names.
+        """
+        def wrapper(self, *args, **kwargs):
+            # Call the original method and get its output (list of indices)
+            out = method(self, *args, **kwargs)
+            
+            # Map the output indices to the values in self.var_names
+            mapped_output = [self.var_names[i] for i in out]
+            
+            return mapped_output
+        
+        return wrapper
+
+    @map_output_to_var_names
+    def select_features(
+            self,
+            threshold: float,
+            ) -> List[int]:
+        """
+        Selects the features based on the transfer entropy scores and a threshold.
+
+        :param threshold: The threshold to use for feature selection.
+        :type threshold: float
+        :return: A list of feature indexes representing the selected features.
+        """
+
+        stop = False
+        initial_features = None
+
+        for iteration in self.result:
+            assert isinstance(iteration["TE"], (float, int)), "TE score must be a number"
+            assert isinstance(iteration["feature_scores"], dict), "feature_scores must be a dictionary"
+
+            if initial_features is None:
+                initial_features = iteration["feature_scores"].keys()
+
+            # First check if the threshold is reached
+            if iteration["TE"] > threshold:
+                if self.verbose >= 1:
+                    print(f"Stopping condition reached: TE score {iteration['TE']} > threshold {threshold}")
+                stop = True
+
+            # Then check if the feature scores are all positive or negative
+            if self.direction == "backward" and min(iteration["feature_scores"].values()) > 0:
+                if self.verbose >= 1:
+                    print("Stopping condition reached: all feature scores are positive")
+                stop = True
+            elif self.direction == "forward" and max(iteration["feature_scores"].values()) < 0:
+                if self.verbose >= 1:
+                    print("Stopping condition reached: all feature scores are negative")
+                stop = True
+
+            # If the stop condition is reached, return the list of selected features indexes
+            if stop:
+                if self.direction == "backward":
+                    # In the backward case the remaining features are the ones that were not removed
+                    return list(iteration["feature_scores"].keys())
+                elif self.direction == "forward":
+                    # In the forward case the remaining features are the ones that were not added yet
+                    # so I need to take the initial set of features and remove the remaining ones
+                    return list(set(initial_features) - set(iteration["feature_scores"].keys()))
+
+        # If the loop reaches the end, no stop condition was reached
+        if self.verbose >= 1:
+            print("Stopping condition not reached")
+        if self.direction == "backward":
+            # Didn't reach the stop condition, I should return no features, but I decide to return the last feature left
+            return list(self.result[-1]["feature_scores"].keys())
+        elif self.direction == "forward":
+            # Didn't reach the stop condition, I return all the features
+            return list(initial_features)
+
+    @map_output_to_var_names
+    def select_n_features(
+            self,
+            n: int,
+            ) -> List[int]:
+        """
+        Selects the `n` features with the highest or lowest score, regardless of the threshold and the transfer entropy scores.
+
+        :param n: The number of features to select.
+        :type n: int
+        :param direction: The direction of selection. Can be either "forward" or "backward".
+        :type direction: str
+        :param verbose: Verbosity level, defaults to 0.
+        :type verbose: int, optional
+        :return: A list of feature indexes representing the selected features.
+        """
+
+        num_total_features = self.features.shape[1]
+        assert 0 < n <= num_total_features, f"n must be between 0 and {num_total_features}"
+
+        if self.direction == "backward":
+
+            for iteration in self.result:
+                features_indexes = iteration["feature_scores"].keys()
+                if len(features_indexes) == n:
+                    return list(features_indexes)
+            
+        elif self.direction == "forward":
+
+            initial_features = None
+
+            for iteration in self.result:
+
+                features_indexes = iteration["feature_scores"].keys()
+
+                if initial_features is None:
+                    initial_features = features_indexes
+
+                if len(features_indexes) == num_total_features - n:
+                    return list(set(initial_features) - set(features_indexes))
+            
+            # If the loop reaches the end, it means that n = num_total_features, so I return all the features
+            return list(initial_features)
+
+
+
 def score_features(
         features: np.ndarray,
         target: np.ndarray,
