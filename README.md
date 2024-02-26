@@ -6,6 +6,8 @@
 
 This repository implements a causal feature selection algorithm based on transfer entropy. The algorithm is described in [TODO: Add reference].
 
+Requires Python 3.9 or later.
+
 ## Installation
 
 The package can be installed using pip:
