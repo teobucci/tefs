@@ -6,6 +6,8 @@
 
 This repository implements a causal feature selection algorithm based on transfer entropy. The algorithm is described in: Bonetti, P., Metelli, A. M., & Restelli, M. (2023, October 17). Causal Feature Selection via Transfer Entropy. (https://arxiv.org/abs/2310.11059).
 
+Requires Python 3.9 or later.
+
 ## Installation
 
 The package can be installed using pip:

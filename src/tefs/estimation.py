@@ -118,3 +118,59 @@ def estimate_cmi(
     XZ = np.hstack((X, Z))
 
     return estimate_mi(XZ, Y, k, estimation_method) - estimate_mi(Z, Y, k, estimation_method)
+
+
+def estimate_conditional_transfer_entropy(
+        X: np.ndarray,
+        Y: np.ndarray,
+        Z: np.ndarray,
+        k: int,
+        lag_features: list[int] = [1],
+        lag_target: list[int] = [1],
+        lag_conditioning: list[int] = None,
+        ) -> float:
+    """
+    Computes the conditional transfer entropy from X to Y given Z, using the specified lags.
+
+    :param X: Sample of a (multivariate) random variable representing the input
+    :type X: np.ndarray of shape (n_samples, n_features)
+    :param Y: Sample of a (multivariate) random variable representing the target
+    :type Y: np.ndarray of shape (n_samples, n_targets)
+    :param Z: Sample of a (multivariate) random variable representing the conditioning
+    :type Z: np.ndarray of shape (n_samples, n_conditioning)
+    :param lag_features: the lag applied on X
+    :type lag_features: List[int]
+    :param lag_target: the lag applied on Y
+    :type lag_target: List[int]
+    :param lag_conditioning: the lag applied on Z, if None it is set to lag_features
+    :type lag_conditioning: List[int]
+    :return: a scalar of the value of the transfer entropy
+    """
+
+    if lag_conditioning is None:
+        lag_conditioning = lag_features
+    
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+    if Y.ndim == 1:
+        Y = Y.reshape(-1, 1)
+    if Z.ndim == 1:
+        Z = Z.reshape(-1, 1)
+
+    max_lag = max(max(lag_features), max(lag_target), max(lag_conditioning))
+
+    # Filling member1
+    member1 = np.hstack([X[max_lag - lag : X.shape[0]-lag, :] for lag in lag_features])
+
+    # Filling member2
+    member2 = Y[max_lag:, :]
+
+    # Filling member3
+    member3 = np.hstack([
+        # Filling the part relative the past of the target
+        *[Y[max_lag - lag : Y.shape[0]-lag, :] for lag in lag_target],
+        # Filling the part relative the past of the conditioning features
+        *[Z[max_lag - lag : Z.shape[0]-lag, :] for lag in lag_conditioning],
+    ])
+
+    return estimate_cmi(member1, member2, member3, k)
