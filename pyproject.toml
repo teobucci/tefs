@@ -27,8 +27,9 @@ classifiers = [
 dependencies = [
     "numpy",
     "pandas",
-    "matplotlib", # Add other dependencies as required
+    "matplotlib",
     "scipy",
+    "seaborn",
 ]
 
 [project.urls]
@@ -46,6 +47,14 @@ docs = [
     "jupyter",
     "jupyterlab",
     "nbconvert",
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "setuptools",
+    "wheel",
+    "twine",
+    "build",
 ]
 
 [tool.bumpver]
