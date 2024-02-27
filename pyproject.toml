@@ -51,6 +51,10 @@ docs = [
 dev = [
     "pytest",
     "pytest-cov",
+    "setuptools",
+    "wheel",
+    "twine",
+    "build",
 ]
 
 [tool.bumpver]

@@ -1,27 +1,45 @@
-name: documentation
+name: Build and deploy documentation
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   docs:
+    name: Build and deploy documentation
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      
       - name: Install Pandoc
         run: |
           sudo apt-get update
           sudo apt-get install -y pandoc
+
       - name: Install dependencies
         run: |
           pip install ".[docs]"
           python -m ipykernel install --user --name python3
+
       - name: Sphinx build
         run: |
           sphinx-build docs/source docs/build
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

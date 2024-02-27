@@ -4,7 +4,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/tefs)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/tefs)
 
-This repository implements a causal feature selection algorithm based on transfer entropy. The algorithm is described in [TODO: Add reference].
+This repository implements a causal feature selection algorithm based on transfer entropy. The algorithm is described in: Bonetti, P., Metelli, A. M., & Restelli, M. (2023, October 17). Causal Feature Selection via Transfer Entropy. (https://arxiv.org/abs/2310.11059).
 
 Requires Python 3.9 or later.
 
