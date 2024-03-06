@@ -427,7 +427,10 @@ class TEFS:
         """
 
         num_total_features = self.features.shape[1]
-        assert 0 < n <= num_total_features, f"n must be between 0 and {num_total_features}"
+        assert 0 <= n <= num_total_features, f"n must be between 0 and {num_total_features}"
+
+        if n == 0:
+            return []
 
         if self.direction == "backward":
 
