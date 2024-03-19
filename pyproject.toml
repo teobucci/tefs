@@ -59,6 +59,7 @@ build = [
     "wheel",
     "twine",
     "build",
+    "bumpver",
 ]
 
 [tool.bumpver]
