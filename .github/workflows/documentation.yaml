@@ -36,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pdm install
+          pdm install -G docs
           pdm run python -m ipykernel install --user --name python3
 
       - name: Sphinx build
