@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -32,13 +32,14 @@ dependencies = [
     "seaborn",
     "scikit-learn",
 ]
+requires-python = ">=3.9"
 
 [project.urls]
 Homepage = "https://github.com/teobucci/tefs"
 Documentation = "https://github.com/teobucci/tefs"
 Repository = "https://github.com/teobucci/tefs"
 
-[project.optional-dependencies]
+[tool.pdm.dev-dependencies]
 docs = [
     "sphinx",
     "sphinx-rtd-theme",
@@ -49,9 +50,11 @@ docs = [
     "jupyterlab",
     "nbconvert",
 ]
-dev = [
+test = [
     "pytest",
     "pytest-cov",
+]
+build = [
     "setuptools",
     "wheel",
     "twine",
@@ -69,3 +72,6 @@ push = true
 [tool.bumpver.file_patterns]
 "pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
 "src/tefs/__init__.py" = ["{version}"]
+
+[tool.pdm]
+distribution = true
