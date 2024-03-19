@@ -31,14 +31,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pandoc
 
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+
       - name: Install dependencies
         run: |
-          pip install ".[docs]"
-          python -m ipykernel install --user --name python3
+          pdm install
+          pdm run python -m ipykernel install --user --name python3
 
       - name: Sphinx build
         run: |
-          sphinx-build docs/source docs/build
+          pdm run sphinx-build docs/source docs/build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
