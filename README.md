@@ -20,6 +20,21 @@ pip install tefs
 
 Refer to the documentation for usage examples.
 
+## Attribution
+
+If you use this package in your research, please cite the following paper:
+
+```bibtex
+@misc{bonetti2023causal,
+    title = {Causal {{Feature Selection}} via {{Transfer Entropy}}},
+    author = {Bonetti, Paolo and Metelli, Alberto Maria and Restelli, Marcello},
+    year = 2023,
+    eprint = {2310.11059},
+    archiveprefix = {arXiv},
+    primaryclass = {cs.LG}
+}
+```
+
 ## Authors
 
 - Paolo Bonetti ([@PaoloBonettiPolimi](https://github.com/PaoloBonettiPolimi))
