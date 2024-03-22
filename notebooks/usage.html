@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; Transfer Entropy Feature Selection 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="tefs package" href="../apidocs/tefs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Transfer Entropy Feature Selection
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../apidocs/modules.html">tefs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Run-the-algorithm">Run the algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Inspect-the-results">Inspect the results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Wrapper-analysis">Wrapper analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#With-train-and-test-split">With train and test split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#With-cross-validation">With cross-validation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transfer Entropy Feature Selection</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/usage.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Usage">
+<h1>Usage<a class="headerlink" href="#Usage" title="Link to this heading"></a></h1>
+<p>Import the library</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">tefs</span> <span class="kn">import</span> <span class="n">TEFS</span>
+<span class="o">%</span><span class="k">config</span> InlineBackend.figure_format = &#39;retina&#39;
+</pre></div>
+</div>
+</div>
+<p>Generate some random data</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">1000</span> <span class="c1"># number of samples</span>
+<span class="n">m</span> <span class="o">=</span> <span class="mi">15</span>   <span class="c1"># number of features</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">data</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;x</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+<span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Train and test split.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_test</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.20</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+<span class="n">n_train</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">n_test</span>
+<span class="n">data_test</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">n_train</span><span class="p">:]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="n">n_train</span><span class="p">]</span>
+
+<span class="n">data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x1</th>
+      <th>x2</th>
+      <th>x3</th>
+      <th>x4</th>
+      <th>x5</th>
+      <th>x6</th>
+      <th>x7</th>
+      <th>x8</th>
+      <th>x9</th>
+      <th>x10</th>
+      <th>x11</th>
+      <th>x12</th>
+      <th>x13</th>
+      <th>x14</th>
+      <th>x15</th>
+      <th>y</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.764052</td>
+      <td>0.555963</td>
+      <td>-1.532921</td>
+      <td>1.593274</td>
+      <td>0.613349</td>
+      <td>0.309724</td>
+      <td>2.042536</td>
+      <td>-0.514878</td>
+      <td>0.997845</td>
+      <td>1.417079</td>
+      <td>-0.202117</td>
+      <td>0.072554</td>
+      <td>0.945508</td>
+      <td>-0.650232</td>
+      <td>-0.706413</td>
+      <td>9.175305</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.400157</td>
+      <td>0.892474</td>
+      <td>-1.711970</td>
+      <td>0.568722</td>
+      <td>1.843700</td>
+      <td>-0.737456</td>
+      <td>-0.919461</td>
+      <td>0.417854</td>
+      <td>0.260081</td>
+      <td>0.443729</td>
+      <td>-0.833231</td>
+      <td>-0.072568</td>
+      <td>0.422924</td>
+      <td>-1.382024</td>
+      <td>-0.302917</td>
+      <td>-0.122971</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.978738</td>
+      <td>-0.422315</td>
+      <td>0.046135</td>
+      <td>-0.114487</td>
+      <td>0.271091</td>
+      <td>-1.536920</td>
+      <td>0.114670</td>
+      <td>-2.048833</td>
+      <td>0.925066</td>
+      <td>-0.076973</td>
+      <td>1.733600</td>
+      <td>0.608673</td>
+      <td>-1.175680</td>
+      <td>1.354920</td>
+      <td>1.463529</td>
+      <td>1.723862</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2.240893</td>
+      <td>0.104714</td>
+      <td>-0.958374</td>
+      <td>0.251630</td>
+      <td>1.136448</td>
+      <td>-0.562255</td>
+      <td>-0.137424</td>
+      <td>-0.989744</td>
+      <td>1.476076</td>
+      <td>-1.091534</td>
+      <td>0.190649</td>
+      <td>0.650469</td>
+      <td>-0.204851</td>
+      <td>0.208252</td>
+      <td>1.800252</td>
+      <td>4.548750</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.867558</td>
+      <td>0.228053</td>
+      <td>-0.080812</td>
+      <td>-1.210856</td>
+      <td>-1.738332</td>
+      <td>-1.599511</td>
+      <td>1.365527</td>
+      <td>-0.338294</td>
+      <td>-1.879252</td>
+      <td>-0.437457</td>
+      <td>-0.177810</td>
+      <td>-0.038883</td>
+      <td>0.956495</td>
+      <td>1.015896</td>
+      <td>0.465122</td>
+      <td>-1.102257</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>Define features and target</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target_name</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">target_name</span><span class="p">])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">target_name</span><span class="p">]</span>
+<span class="n">features_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">features</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Configuration">
+<h2>Configuration<a class="headerlink" href="#Configuration" title="Link to this heading"></a></h2>
+<p>Set the hyperparameters</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">k</span> <span class="o">=</span> <span class="n">n_train</span> <span class="o">//</span> <span class="mi">10</span> <span class="c1"># Set k using the rule of thumb</span>
+<span class="n">direction</span> <span class="o">=</span> <span class="s1">&#39;forward&#39;</span> <span class="c1"># or &#39;backward&#39;</span>
+<span class="n">lag_features</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">lag_target</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Run-the-algorithm">
+<h2>Run the algorithm<a class="headerlink" href="#Run-the-algorithm" title="Link to this heading"></a></h2>
+<p>Perform feature selection</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fs</span> <span class="o">=</span> <span class="n">TEFS</span><span class="p">(</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+    <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span>
+    <span class="n">lag_features</span><span class="o">=</span><span class="n">lag_features</span><span class="p">,</span>
+    <span class="n">lag_target</span><span class="o">=</span><span class="n">lag_target</span><span class="p">,</span>
+    <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">var_names</span><span class="o">=</span><span class="n">features_names</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">fs</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Iteration 1
+Candidate Features: [&#39;x1&#39;, &#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x6&#39;, &#39;x7&#39;, &#39;x8&#39;, &#39;x9&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x12&#39;, &#39;x13&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: []
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0
+TE score of feature x1: 0.0065343054346751785
+TE score of feature x2: 0.0038414903724176596
+TE score of feature x3: 0.003600417621490785
+TE score of feature x4: 0.0026015969566026255
+TE score of feature x5: 0.00034785034376453444
+TE score of feature x6: 0.013607666818158401
+TE score of feature x7: 0.011548104377463744
+TE score of feature x8: 0.011620108322237324
+TE score of feature x9: 0.0020129567957008804
+TE score of feature x10: 0.005302052028124017
+TE score of feature x11: 0.01013801722365876
+TE score of feature x12: 0.014965939550519362
+TE score of feature x13: 0.006245704397464738
+TE score of feature x14: 0.0056244881350151175
+TE score of feature x15: -0.000731663087928912
+Adding feature x12 with TE score: 0.014965939550519362
+--------------------------------------------------------------------------------
+Iteration 2
+Candidate Features: [&#39;x1&#39;, &#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x6&#39;, &#39;x7&#39;, &#39;x8&#39;, &#39;x9&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x13&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.014965939550519362
+TE score of feature x1: 0.0013055562084052837
+TE score of feature x2: 0.0007273187131456669
+TE score of feature x3: 0.0018788736661717181
+TE score of feature x4: 0.0013595643175429144
+TE score of feature x5: -0.002101690377026443
+TE score of feature x6: 0.00752857502500005
+TE score of feature x7: 0.00871213615994593
+TE score of feature x8: 0.00954510734466964
+TE score of feature x9: 0.0038768124023574255
+TE score of feature x10: 0.004401210370012502
+TE score of feature x11: 0.005130346947198883
+TE score of feature x13: 0.005544289821595133
+TE score of feature x14: 0.00392067388236423
+TE score of feature x15: -0.0012145039715335624
+Adding feature x8 with TE score: 0.00954510734466964
+--------------------------------------------------------------------------------
+Iteration 3
+Candidate Features: [&#39;x1&#39;, &#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x6&#39;, &#39;x7&#39;, &#39;x9&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x13&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.024511046895189
+TE score of feature x1: 0.0012053677767031937
+TE score of feature x2: 0.00035623941071031076
+TE score of feature x3: 0.0024168133987764844
+TE score of feature x4: -0.0012838091171882698
+TE score of feature x5: -0.002833540362227178
+TE score of feature x6: 0.00453555059214833
+TE score of feature x7: 0.006013331790234444
+TE score of feature x9: 0.0034167963934878844
+TE score of feature x10: -0.0015145731350812396
+TE score of feature x11: 0.0022185616410056383
+TE score of feature x13: 0.0014892671743266493
+TE score of feature x14: 0.0013557363382687843
+TE score of feature x15: -0.0024188206931064597
+Adding feature x7 with TE score: 0.006013331790234444
+--------------------------------------------------------------------------------
+Iteration 4
+Candidate Features: [&#39;x1&#39;, &#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x6&#39;, &#39;x9&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x13&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.030524378685423445
+TE score of feature x1: 0.0019641418378640065
+TE score of feature x2: 0.000151235147966753
+TE score of feature x3: 0.00011741714570180639
+TE score of feature x4: -0.0016049589765018794
+TE score of feature x5: -0.003006015433380735
+TE score of feature x6: 0.0047719824741903685
+TE score of feature x9: 0.0018890151361312876
+TE score of feature x10: -0.0007014277299260997
+TE score of feature x11: 0.0005701722057113029
+TE score of feature x13: 0.003392254762094822
+TE score of feature x14: 0.0014484566325178479
+TE score of feature x15: -0.0013966791235112234
+Adding feature x6 with TE score: 0.0047719824741903685
+--------------------------------------------------------------------------------
+Iteration 5
+Candidate Features: [&#39;x1&#39;, &#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x9&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x13&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.035296361159613814
+TE score of feature x1: 0.002422959100210169
+TE score of feature x2: 0.000552941391431
+TE score of feature x3: -0.000204567344424679
+TE score of feature x4: -0.0021070320682834535
+TE score of feature x5: -0.0021681724113668324
+TE score of feature x9: 0.0013040213411754237
+TE score of feature x10: -0.0011811026876590372
+TE score of feature x11: 0.0009546641299241695
+TE score of feature x13: 0.0029839892527172285
+TE score of feature x14: 0.00023475224576745973
+TE score of feature x15: -0.000943254940896858
+Adding feature x13 with TE score: 0.0029839892527172285
+--------------------------------------------------------------------------------
+Iteration 6
+Candidate Features: [&#39;x1&#39;, &#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x9&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.03828035041233104
+TE score of feature x1: 0.0029508553356178066
+TE score of feature x2: -0.0010669613419275192
+TE score of feature x3: -0.0009411416090847544
+TE score of feature x4: -0.003598460609641349
+TE score of feature x5: -0.00242318137004819
+TE score of feature x9: 0.0014014304136280298
+TE score of feature x10: -0.0018315251587687834
+TE score of feature x11: -0.0003283145276398794
+TE score of feature x14: 1.8346431141666453e-05
+TE score of feature x15: 2.517457590234945e-05
+Adding feature x1 with TE score: 0.0029508553356178066
+--------------------------------------------------------------------------------
+Iteration 7
+Candidate Features: [&#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x9&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.04123120574794885
+TE score of feature x2: -0.0004317197190388186
+TE score of feature x3: -0.000989337006028726
+TE score of feature x4: -0.002818935999085989
+TE score of feature x5: -0.001945420044181627
+TE score of feature x9: 0.00217508096071857
+TE score of feature x10: -0.00019687425782340118
+TE score of feature x11: 0.0012217823281885157
+TE score of feature x14: 0.0017176418533329865
+TE score of feature x15: 0.0009231477290766385
+Adding feature x9 with TE score: 0.00217508096071857
+--------------------------------------------------------------------------------
+Iteration 8
+Candidate Features: [&#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x10&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.04340628670866742
+TE score of feature x2: -0.00032332645243728086
+TE score of feature x3: -0.0008139213269566098
+TE score of feature x4: -0.0023738620335060356
+TE score of feature x5: -0.002364048638271256
+TE score of feature x10: -0.00021012032071420633
+TE score of feature x11: 0.0021241785305713273
+TE score of feature x14: 0.001492418984884017
+TE score of feature x15: 0.0009081463554722127
+Adding feature x11 with TE score: 0.0021241785305713273
+--------------------------------------------------------------------------------
+Iteration 9
+Candidate Features: [&#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x10&#39;, &#39;x14&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;, &#39;x11&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.045530465239238746
+TE score of feature x2: -0.0017278931015610247
+TE score of feature x3: -0.0019065916282272957
+TE score of feature x4: -0.0030349221509298682
+TE score of feature x5: -0.003052054470434294
+TE score of feature x10: -0.0018984331957644165
+TE score of feature x14: 0.0007848456002002291
+TE score of feature x15: -0.000625888163016633
+Adding feature x14 with TE score: 0.0007848456002002291
+--------------------------------------------------------------------------------
+Iteration 10
+Candidate Features: [&#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x10&#39;, &#39;x15&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;, &#39;x11&#39;, &#39;x14&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.046315310839438975
+TE score of feature x2: -0.001289481946337545
+TE score of feature x3: -0.0005090018753193676
+TE score of feature x4: -0.0028239963633098636
+TE score of feature x5: -0.0020623971802022703
+TE score of feature x10: -0.0016601316187055681
+TE score of feature x15: 0.0005793705387971484
+Adding feature x15 with TE score: 0.0005793705387971484
+--------------------------------------------------------------------------------
+Iteration 11
+Candidate Features: [&#39;x2&#39;, &#39;x3&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x10&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.046894681378236124
+TE score of feature x2: -0.0004953859211299094
+TE score of feature x3: -0.0004593516555541771
+TE score of feature x4: -0.0019690749398206947
+TE score of feature x5: -0.0020380422483286045
+TE score of feature x10: -0.0005852975309524749
+Adding feature x3 with TE score: -0.0004593516555541771
+--------------------------------------------------------------------------------
+Iteration 12
+Candidate Features: [&#39;x2&#39;, &#39;x4&#39;, &#39;x5&#39;, &#39;x10&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;, &#39;x3&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.046894681378236124
+TE score of feature x2: 2.907300225480497e-05
+TE score of feature x4: -0.002354976576440987
+TE score of feature x5: -0.002808249327202285
+TE score of feature x10: -0.0004694206739707177
+Adding feature x2 with TE score: 2.907300225480497e-05
+--------------------------------------------------------------------------------
+Iteration 13
+Candidate Features: [&#39;x4&#39;, &#39;x5&#39;, &#39;x10&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;, &#39;x3&#39;, &#39;x2&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.04692375438049093
+TE score of feature x4: -0.00327343234643572
+TE score of feature x5: -0.0032445023144182447
+TE score of feature x10: -0.00036744104399127897
+Adding feature x10 with TE score: -0.00036744104399127897
+--------------------------------------------------------------------------------
+Iteration 14
+Candidate Features: [&#39;x4&#39;, &#39;x5&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;, &#39;x3&#39;, &#39;x2&#39;, &#39;x10&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.04692375438049093
+TE score of feature x4: -0.002263935277169775
+TE score of feature x5: -0.002410841634892198
+Adding feature x4 with TE score: -0.002263935277169775
+--------------------------------------------------------------------------------
+Iteration 15
+Candidate Features: [&#39;x5&#39;]
+Selected Features: [&#39;x12&#39;, &#39;x8&#39;, &#39;x7&#39;, &#39;x6&#39;, &#39;x13&#39;, &#39;x1&#39;, &#39;x9&#39;, &#39;x11&#39;, &#39;x14&#39;, &#39;x15&#39;, &#39;x3&#39;, &#39;x2&#39;, &#39;x10&#39;, &#39;x4&#39;]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+TE_cumulated: 0.04692375438049093
+TE score of feature x5: -0.0012547866025623827
+Adding feature x5 with TE score: -0.0012547866025623827
+--------------------------------------------------------------------------------
+</pre></div></div>
+</div>
+</section>
+<section id="Inspect-the-results">
+<h2>Inspect the results<a class="headerlink" href="#Inspect-the-results" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">plot_te_results</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_usage_14_0.png" class="no-scaled-link" src="../_images/notebooks_usage_14_0.png" style="width: 718px; height: 454px;" />
+</div>
+</div>
+<p>Select features based on threshold</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">selected_features</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">select_features</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+<span class="n">n_features_selected_with_threshold</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_features</span><span class="p">)</span>
+<span class="n">selected_features</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Stopping condition reached: all feature scores are negative
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&#39;x1&#39;, &#39;x6&#39;, &#39;x7&#39;, &#39;x8&#39;, &#39;x9&#39;, &#39;x11&#39;, &#39;x12&#39;, &#39;x13&#39;, &#39;x14&#39;, &#39;x15&#39;]
+</pre></div></div>
+</div>
+<p>Select specific number of features</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">selected_features</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">select_n_features</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">selected_features</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&#39;x12&#39;, &#39;x6&#39;, &#39;x7&#39;, &#39;x8&#39;]
+</pre></div></div>
+</div>
+</section>
+<section id="Wrapper-analysis">
+<h2>Wrapper analysis<a class="headerlink" href="#Wrapper-analysis" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tefs.metrics</span> <span class="kn">import</span> <span class="n">regression_analysis</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">TimeSeriesSplit</span>
+
+<span class="n">num_total_features</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">scores_cv</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">unified_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">data</span><span class="p">,</span> <span class="n">data_test</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">n_samples</span> <span class="o">=</span> <span class="n">unified_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">n_splits</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="c1"># Fixed-size rolling window</span>
+<span class="n">cv_scheme</span> <span class="o">=</span> <span class="n">TimeSeriesSplit</span><span class="p">(</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="n">n_splits</span><span class="p">,</span>
+    <span class="n">max_train_size</span><span class="o">=</span><span class="n">n_samples</span> <span class="o">//</span> <span class="p">(</span><span class="n">n_splits</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n_features</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_total_features</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+
+    <span class="n">selected_features</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">select_n_features</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n_features</span><span class="p">)</span>
+    <span class="n">inputs_names_lags</span> <span class="o">=</span> <span class="p">{</span><span class="n">feature</span><span class="p">:</span> <span class="n">lag_features</span> <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">selected_features</span><span class="p">}</span>
+    <span class="n">inputs_names_lags</span><span class="p">[</span><span class="n">target_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lag_target</span>
+
+    <span class="c1"># Train-test scores</span>
+    <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">regression_analysis</span><span class="p">(</span>
+        <span class="n">inputs_names_lags</span><span class="o">=</span><span class="n">inputs_names_lags</span><span class="p">,</span>
+        <span class="n">target_name</span><span class="o">=</span><span class="n">target_name</span><span class="p">,</span>
+        <span class="n">df_train</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">df_test</span><span class="o">=</span><span class="n">data_test</span><span class="p">,</span>
+    <span class="p">))</span>
+
+    <span class="c1"># Cross-validation scores</span>
+    <span class="n">scores_cv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">regression_analysis</span><span class="p">(</span>
+        <span class="n">inputs_names_lags</span><span class="o">=</span><span class="n">inputs_names_lags</span><span class="p">,</span>
+        <span class="n">target_name</span><span class="o">=</span><span class="n">target_name</span><span class="p">,</span>
+        <span class="n">df</span><span class="o">=</span><span class="n">unified_df</span><span class="p">,</span>
+        <span class="n">cv_scheme</span><span class="o">=</span><span class="n">cv_scheme</span><span class="p">,</span>
+    <span class="p">))</span>
+
+<span class="n">scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+<span class="n">scores_cv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores_cv</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="With-train-and-test-split">
+<h3>With train and test split<a class="headerlink" href="#With-train-and-test-split" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Fixed train-test&quot;</span><span class="p">)</span>
+<span class="n">maxima</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scores</span> <span class="o">==</span> <span class="n">scores</span><span class="o">.</span><span class="n">max</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">maxima</span><span class="p">,</span> <span class="n">scores</span><span class="p">[</span><span class="n">maxima</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Maximum&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">n_features_selected_with_threshold</span><span class="p">,</span> <span class="n">scores</span><span class="p">[</span><span class="n">n_features_selected_with_threshold</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;TEFS (conservative)&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Number of features&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Test R2&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Wrapper TEFS&quot;</span><span class="p">)</span>
+<span class="n">step</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_total_features</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_total_features</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_usage_22_0.png" class="no-scaled-link" src="../_images/notebooks_usage_22_0.png" style="width: 854px; height: 476px;" />
+</div>
+</div>
+</section>
+<section id="With-cross-validation">
+<h3>With cross-validation<a class="headerlink" href="#With-cross-validation" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scipy.stats</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scores_cv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Cross-validation&quot;</span><span class="p">)</span>
+<span class="n">maxima</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scores_cv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">scores_cv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">maxima</span><span class="p">,</span> <span class="n">scores_cv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="n">maxima</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Maximum&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">n_features_selected_with_threshold</span><span class="p">,</span> <span class="n">scores_cv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="n">n_features_selected_with_threshold</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;TEFS (conservative)&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="c1"># plot confidence interval bands from cross-validation based on mean and standard deviation (90% confidence)</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">quantile</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+    <span class="nb">range</span><span class="p">(</span><span class="n">scores_cv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="n">scores_cv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">scores_cv</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">quantile</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">scores_cv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="n">scores_cv</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">scores_cv</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">quantile</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">scores_cv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Number of features&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Test R2&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Wrapper TEFS&quot;</span><span class="p">)</span>
+<span class="n">step</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_total_features</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_total_features</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_usage_24_0.png" class="no-scaled-link" src="../_images/notebooks_usage_24_0.png" style="width: 854px; height: 476px;" />
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../apidocs/tefs.html" class="btn btn-neutral float-left" title="tefs package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Paolo Bonetti, Teo Bucci.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
